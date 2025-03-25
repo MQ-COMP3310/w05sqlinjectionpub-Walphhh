@@ -27,6 +27,20 @@ public class App {
         }
     }
 
+    public static boolean isStringValid(String s) {
+        if(s == null || s.length() > 4) return false;
+
+        for(int i = 0; i < s.length(); i++){
+            char c = s.charAt(i);
+            if(Character.isUpperCase(c) || !(Character.isLetter(c))){
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+
     private static final Logger logger = Logger.getLogger(App.class.getName());
     // End code for logging exercise
     
@@ -38,32 +52,40 @@ public class App {
 
         wordleDatabaseConnection.createNewDatabase("words.db");
         if (wordleDatabaseConnection.checkIfConnectionDefined()) {
-            System.out.println("Wordle created and connected.");
+            // System.out.println("Wordle created and connected.");
         } else {
             System.out.println("Not able to connect. Sorry!");
             return;
         }
         if (wordleDatabaseConnection.createWordleTables()) {
-            System.out.println("Wordle structures in place.");
+            // System.out.println("Wordle structures in place.");
         } else {
-            System.out.println("Not able to launch. Sorry!");
+            // System.out.println("Not able to launch. Sorry!");
             return;
         }
+        
+        
 
         // let's add some words to valid 4 letter words from the data.txt file
 
         try (BufferedReader br = new BufferedReader(new FileReader("resources/data.txt"))) {
             String line;
             int i = 1;
+            System.out.println("Adding words to valid words list");
             while ((line = br.readLine()) != null) {
-                System.out.println(line);
-                wordleDatabaseConnection.addValidWord(i, line);
+                if(isStringValid(line) ){
+                    String msg = String.format("Valid Word Added %s", line);
+                    logger.info(msg);
+                    wordleDatabaseConnection.addValidWord(i, line);
+                } else {
+                    String msg = String.format("Invalid word found %s", line);
+                    logger.severe(msg);
+                }
                 i++;
             }
 
         } catch (IOException e) {
-            System.out.println("Not able to load . Sorry!");
-            System.out.println(e.getMessage());
+            logger.warning("Exception found: " + e.getMessage());
             return;
         }
 
@@ -80,13 +102,15 @@ public class App {
                     System.out.println("Success! It is in the the list.\n");
                 }else{
                     System.out.println("Sorry. This word is NOT in the the list.\n");
+                    String msg = String.format("Invalid word guessed %s", guess);
+                    logger.warning(msg);
                 }
 
                 System.out.print("Enter a 4 letter word for a guess or q to quit: " );
                 guess = scanner.nextLine();
             }
         } catch (NoSuchElementException | IllegalStateException e) {
-            e.printStackTrace();
+            logger.warning("Exception found: " + e.getMessage());
         }
 
     }
